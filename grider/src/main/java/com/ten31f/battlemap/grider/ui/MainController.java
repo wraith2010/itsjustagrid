@@ -1,6 +1,7 @@
 package com.ten31f.battlemap.grider.ui;
 
 import java.awt.Button;
+import java.awt.Color;
 import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -25,6 +26,8 @@ public class MainController implements WindowListener {
 	private String filePath = null;
 	private Grid grid = null;
 
+	private static final int COLOR_CHANGE = 500;
+	
 	public MainController(String filePath) {
 		prepareGUI();
 		setFilePath(filePath);
@@ -48,7 +51,7 @@ public class MainController implements WindowListener {
 		getControlpanelFrame().addWindowListener(this);
 
 		getControlpanelFrame().setVisible(true);
-		getControlpanelFrame().setLayout(new GridLayout(4, 2));
+		getControlpanelFrame().setLayout(new GridLayout(7, 2));
 
 		Button button = (Button) getControlpanelFrame().add(new Button("X++"));
 		button.addActionListener(new ActionListener() {
@@ -138,6 +141,81 @@ public class MainController implements WindowListener {
 			}
 		});
 
+		button = (Button) getControlpanelFrame().add(new Button("LowerThreshhold++"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				getGrid().setLuminosityThresholdLowerLimit(getGrid().getLuminosityThresholdLowerLimit() + 0.05f);
+				render();
+
+			}
+		});
+
+		button = (Button) getControlpanelFrame().add(new Button("LowerThreshhold--"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (getGrid().getLuminosityThresholdLowerLimit() >= 0f) {
+					getGrid().setLuminosityThresholdLowerLimit(getGrid().getLuminosityThresholdLowerLimit() - 0.05f);
+					render();
+				}
+
+			}
+		});
+
+		button = (Button) getControlpanelFrame().add(new Button("Threshhold++"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+
+				getGrid().setLuminosityThresholdUpperLimit(getGrid().getLuminosityThresholdUpperLimit() + 0.05f);
+				render();
+
+			}
+		});
+
+		button = (Button) getControlpanelFrame().add(new Button("Threshhold--"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (getGrid().getLuminosityThresholdUpperLimit() >= 0f) {
+					getGrid().setLuminosityThresholdUpperLimit(getGrid().getLuminosityThresholdUpperLimit() - 0.05f);
+					render();
+				}
+
+			}
+		});
+
+		button = (Button) getControlpanelFrame().add(new Button("Color++"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (getGrid().getTargetColor() < Color.WHITE.getRGB()) {
+					getGrid().setTargetColor(getGrid().getTargetColor() + COLOR_CHANGE);
+					render();
+				}
+			}
+		});
+
+		button = (Button) getControlpanelFrame().add(new Button("Color--"));
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (getGrid().getTargetColor() > Color.BLACK.getRGB()) {
+					getGrid().setTargetColor(getGrid().getTargetColor() - COLOR_CHANGE);
+					render();
+				}
+
+			}
+		});
+
 		getControlpanelFrame().setVisible(true);
 		getImageFrame().setVisible(true);
 	}
@@ -191,6 +269,7 @@ public class MainController implements WindowListener {
 	}
 
 	private void setFilePath(String filePath) {
+		LOGGER.info(String.format("image: %s", filePath));
 		this.filePath = filePath;
 	}
 

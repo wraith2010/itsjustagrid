@@ -30,6 +30,9 @@ public class Drawer {
 		int width = bufferedImage.getWidth();
 		int height = bufferedImage.getHeight();
 
+		// luminosity(bufferedImage);
+		colorHighLight(bufferedImage, getGrid().getTargetColor());
+
 		Graphics2D graphics2d = bufferedImage.createGraphics();
 
 		graphics2d.setColor(Color.RED);
@@ -40,6 +43,60 @@ public class Drawer {
 		horizontalLines(graphics2d, width, height);
 
 		return bufferedImage;
+	}
+
+	private boolean colorMatch(int rgb) {
+
+		int targetColor = getGrid().getTargetColor();
+
+		return (targetColor + 100 > rgb) && (targetColor - 100 < rgb);
+	}
+
+	public void luminosity(BufferedImage bufferedImage) {
+
+		int height = bufferedImage.getHeight();
+		int width = bufferedImage.getWidth();
+
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				int color = bufferedImage.getRGB(x, y);
+
+				int red = (color >>> 16) & 0xFF;
+				int green = (color >>> 8) & 0xFF;
+				int blue = (color >>> 0) & 0xFF;
+
+				float luminance = (red * 0.2126f + green * 0.7152f + blue * 0.0722f) / 255;
+
+				// choose brightness threshold as appropriate:
+				if (luminance < getGrid().getLuminosityThresholdUpperLimit()
+						&& luminance > getGrid().getLuminosityThresholdLowerLimit()) {
+					bufferedImage.setRGB(x, y, Color.YELLOW.getRGB());
+				} else {
+					bufferedImage.setRGB(x, y, Color.GRAY.getRGB());
+				}
+			}
+		}
+
+	}
+
+	public void colorHighLight(BufferedImage bufferedImage, int targetColor) {
+
+		int height = bufferedImage.getHeight();
+		int width = bufferedImage.getWidth();
+
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				int color = bufferedImage.getRGB(x, y);
+
+				// choose brightness threshold as appropriate:
+				if (colorMatch(color) ) {
+					bufferedImage.setRGB(x, y, Color.YELLOW.getRGB());
+				} else {
+					bufferedImage.setRGB(x, y, Color.GRAY.getRGB());
+				}
+			}
+		}
+
 	}
 
 	private float getWidthLimit(int width) {
