@@ -31,7 +31,7 @@ public class Drawer {
 		int height = bufferedImage.getHeight();
 
 		// luminosity(bufferedImage);
-		colorHighLight(bufferedImage, getGrid().getTargetColor());
+		//colorHighLight(bufferedImage, getGrid().getTargetColor());
 
 		Graphics2D graphics2d = bufferedImage.createGraphics();
 

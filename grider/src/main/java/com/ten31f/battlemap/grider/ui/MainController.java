@@ -1,16 +1,15 @@
 package com.ten31f.battlemap.grider.ui;
 
-import java.awt.Button;
-import java.awt.Color;
 import java.awt.Frame;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+
+import javax.swing.JScrollPane;
 
 import com.ten31f.battlemap.grider.actions.Drawer;
 import com.ten31f.battlemap.grider.domain.Grid;
@@ -19,205 +18,134 @@ public class MainController implements WindowListener {
 
 	private static Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
-	private Frame imageFrame = null;
-	private Frame controlpanelFrame = null;
+	private Frame presentorFrame = null;
+	private Frame dmFrame = null;
+
 	private ImageComponent imageComponent = null;
 
 	private String filePath = null;
 	private Grid grid = null;
 
-	private static final int COLOR_CHANGE = 500;
-	
+	private List<Frame> frames = null;
+
 	public MainController(String filePath) {
 		prepareGUI();
 		setFilePath(filePath);
-		setGrid(new Grid(3, 3));
+		setGrid(new Grid(50, 50));
 		render();
 	}
 
 	private void prepareGUI() {
 
-		setImageFrame(new Frame());
-		getImageFrame().setSize(800, 800);
-		getImageFrame().addWindowListener(this);
+		Frame frame = new Frame();
+		setPresentorFrame(frame);
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+		frame.setVisible(true);
+		frame.setSize(500, 500);
+		frame.addWindowListener(this);
+		addFrames(frame);
 
+		frame = new Frame();
+		setDmFrame(frame);
+		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
+		frame.setVisible(true);
+		frame.setSize(500, 500);
+		frame.addWindowListener(this);
+		
 		setImageComponent(new ImageComponent());
+		frame.add(new JScrollPane(getImageComponent()));
+		
+		
+		addFrames(frame);
 
-		getImageFrame().add(getImageComponent());
+//		Button button = (Button) getControlpanelFrame().add(new Button("X++"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				getGrid().setxCells(getGrid().getxCells() + 1);
+//				render();
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("X--"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				if (getGrid().getxCells() > 1) {
+//					getGrid().setxCells(getGrid().getxCells() - 1);
+//					render();
+//				}
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Y++"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				getGrid().setyCells(getGrid().getyCells() + 1);
+//				render();
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Y--"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				if (getGrid().getyCells() > 1) {
+//					getGrid().setyCells(getGrid().getyCells() - 1);
+//					render();
+//				}
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Vertical++"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				getGrid().setVerticalBorder(getGrid().getVerticalBorder() + 1f);
+//				render();
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Vertical--"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				if (getGrid().getVerticalBorder() >= 0f) {
+//					getGrid().setVerticalBorder(getGrid().getVerticalBorder() - 1f);
+//					render();
+//				}
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Horizontal++"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() + 1f);
+//				render();
+//			}
+//		});
+//
+//		button = (Button) getControlpanelFrame().add(new Button("Horizontal--"));
+//		button.addActionListener(new ActionListener() {
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				if (getGrid().getHorizantalBorder() >= 0f) {
+//					getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() - 1f);
+//					render();
+//				}
+//			}
+//		});
 
-		setControlpanelFrame(new Frame());
-		getControlpanelFrame().setSize(400, 400);
-
-		getControlpanelFrame().addWindowListener(this);
-
-		getControlpanelFrame().setVisible(true);
-		getControlpanelFrame().setLayout(new GridLayout(7, 2));
-
-		Button button = (Button) getControlpanelFrame().add(new Button("X++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				getGrid().setxCells(getGrid().getxCells() + 1);
-				render();
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("X--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getxCells() > 1) {
-					getGrid().setxCells(getGrid().getxCells() - 1);
-					render();
-				}
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Y++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				getGrid().setyCells(getGrid().getyCells() + 1);
-				render();
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Y--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getyCells() > 1) {
-					getGrid().setyCells(getGrid().getyCells() - 1);
-					render();
-				}
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Vertical++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				getGrid().setVerticalBorder(getGrid().getVerticalBorder() + 1f);
-				render();
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Vertical--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getVerticalBorder() >= 0f) {
-					getGrid().setVerticalBorder(getGrid().getVerticalBorder() - 1f);
-					render();
-				}
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Horizontal++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() + 1f);
-				render();
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Horizontal--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getHorizantalBorder() >= 0f) {
-					getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() - 1f);
-					render();
-				}
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("LowerThreshhold++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				getGrid().setLuminosityThresholdLowerLimit(getGrid().getLuminosityThresholdLowerLimit() + 0.05f);
-				render();
-
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("LowerThreshhold--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getLuminosityThresholdLowerLimit() >= 0f) {
-					getGrid().setLuminosityThresholdLowerLimit(getGrid().getLuminosityThresholdLowerLimit() - 0.05f);
-					render();
-				}
-
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Threshhold++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				getGrid().setLuminosityThresholdUpperLimit(getGrid().getLuminosityThresholdUpperLimit() + 0.05f);
-				render();
-
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Threshhold--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getLuminosityThresholdUpperLimit() >= 0f) {
-					getGrid().setLuminosityThresholdUpperLimit(getGrid().getLuminosityThresholdUpperLimit() - 0.05f);
-					render();
-				}
-
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Color++"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getTargetColor() < Color.WHITE.getRGB()) {
-					getGrid().setTargetColor(getGrid().getTargetColor() + COLOR_CHANGE);
-					render();
-				}
-			}
-		});
-
-		button = (Button) getControlpanelFrame().add(new Button("Color--"));
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getGrid().getTargetColor() > Color.BLACK.getRGB()) {
-					getGrid().setTargetColor(getGrid().getTargetColor() - COLOR_CHANGE);
-					render();
-				}
-
-			}
-		});
-
-		getControlpanelFrame().setVisible(true);
-		getImageFrame().setVisible(true);
 	}
 
 	private void render() {
@@ -236,24 +164,38 @@ public class MainController implements WindowListener {
 	}
 
 	private void repaint() {
-		getImageFrame().repaint();
-		getControlpanelFrame().repaint();
+		getFrames().stream().forEach(Frame::repaint);
 	}
 
-	private Frame getImageFrame() {
-		return imageFrame;
+	private void setFrames(List<Frame> frames) {
+		this.frames = frames;
 	}
 
-	private void setImageFrame(Frame imageFrame) {
-		this.imageFrame = imageFrame;
+	private List<Frame> getFrames() {
+		return frames;
 	}
 
-	private Frame getControlpanelFrame() {
-		return controlpanelFrame;
+	private void addFrames(Frame frame) {
+		if (getFrames() == null)
+			setFrames(new ArrayList<>());
+
+		getFrames().add(frame);
 	}
 
-	private void setControlpanelFrame(Frame controlpanelFrame) {
-		this.controlpanelFrame = controlpanelFrame;
+	private Frame getDmFrame() {
+		return dmFrame;
+	}
+
+	private void setDmFrame(Frame dmFrame) {
+		this.dmFrame = dmFrame;
+	}
+
+	private Frame getPresentorFrame() {
+		return presentorFrame;
+	}
+
+	private void setPresentorFrame(Frame presentorFrame) {
+		this.presentorFrame = presentorFrame;
 	}
 
 	private ImageComponent getImageComponent() {
