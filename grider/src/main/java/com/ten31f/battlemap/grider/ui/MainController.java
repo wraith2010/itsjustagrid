@@ -1,38 +1,49 @@
 package com.ten31f.battlemap.grider.ui;
 
+import java.awt.Color;
 import java.awt.Frame;
+import java.awt.GridLayout;
+import java.awt.Panel;
+import java.awt.ScrollPane;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JScrollPane;
+import javax.imageio.ImageIO;
 
-import com.ten31f.battlemap.grider.actions.Drawer;
+import com.ten31f.battlemap.grider.actions.Carver;
+import com.ten31f.battlemap.grider.actions.Shader;
 import com.ten31f.battlemap.grider.domain.Grid;
+import com.ten31f.battlemap.grider.domain.TileState;
 
-public class MainController implements WindowListener {
+public class MainController implements WindowListener, MouseListener {
 
 	private static Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
 	private Frame presentorFrame = null;
 	private Frame dmFrame = null;
 
-	private ImageComponent imageComponent = null;
-
 	private String filePath = null;
 	private Grid grid = null;
 
 	private List<Frame> frames = null;
 
+	private Map<ImageComponent, ImageComponent> imageComponentMap = null;
+
 	public MainController(String filePath) {
-		prepareGUI();
 		setFilePath(filePath);
 		setGrid(new Grid(50, 50));
-		render();
+		prepareGUI();
+		repaint();
 	}
 
 	private void prepareGUI() {
@@ -43,6 +54,29 @@ public class MainController implements WindowListener {
 		frame.setVisible(true);
 		frame.setSize(500, 500);
 		frame.addWindowListener(this);
+		frame.setTitle("Controller");
+
+		ScrollPane scrollPane = new ScrollPane();
+		frame.add(scrollPane);
+
+		Panel panel = new Panel();
+		panel.setBackground(Color.darkGray);
+		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
+		scrollPane.add(panel);
+
+		List<ImageComponent> contorllerImageComponents = null;
+		try {
+			contorllerImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
+
+			for (ImageComponent imageComponent : contorllerImageComponents) {
+
+				panel.add(imageComponent);
+			}
+
+		} catch (IOException ioException) {
+			LOGGER.log(Level.SEVERE, "Error loading image", ioException);
+		}
+
 		addFrames(frame);
 
 		frame = new Frame();
@@ -51,115 +85,40 @@ public class MainController implements WindowListener {
 		frame.setVisible(true);
 		frame.setSize(500, 500);
 		frame.addWindowListener(this);
-		
-		setImageComponent(new ImageComponent());
-		frame.add(new JScrollPane(getImageComponent()));
-		
-		
-		addFrames(frame);
+		frame.setTitle("presenter");
 
-//		Button button = (Button) getControlpanelFrame().add(new Button("X++"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				getGrid().setxCells(getGrid().getxCells() + 1);
-//				render();
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("X--"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				if (getGrid().getxCells() > 1) {
-//					getGrid().setxCells(getGrid().getxCells() - 1);
-//					render();
-//				}
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Y++"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				getGrid().setyCells(getGrid().getyCells() + 1);
-//				render();
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Y--"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				if (getGrid().getyCells() > 1) {
-//					getGrid().setyCells(getGrid().getyCells() - 1);
-//					render();
-//				}
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Vertical++"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				getGrid().setVerticalBorder(getGrid().getVerticalBorder() + 1f);
-//				render();
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Vertical--"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				if (getGrid().getVerticalBorder() >= 0f) {
-//					getGrid().setVerticalBorder(getGrid().getVerticalBorder() - 1f);
-//					render();
-//				}
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Horizontal++"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() + 1f);
-//				render();
-//			}
-//		});
-//
-//		button = (Button) getControlpanelFrame().add(new Button("Horizontal--"));
-//		button.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				if (getGrid().getHorizantalBorder() >= 0f) {
-//					getGrid().setHorizantalBorder(getGrid().getHorizantalBorder() - 1f);
-//					render();
-//				}
-//			}
-//		});
+		scrollPane = new ScrollPane();
+		frame.add(scrollPane);
 
-	}
+		panel = new Panel();
+		panel.setBackground(Color.darkGray);
+		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
+		scrollPane.add(panel);
 
-	private void render() {
-
-		long startTime = -System.currentTimeMillis();
-
+		List<ImageComponent> presenterImageComponents = null;
 		try {
-			getImageComponent().setImage(new Drawer(new File(getFilePath()), getGrid()).lineField());
+			presenterImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
+
+			for (ImageComponent imageComponent : presenterImageComponents) {
+
+				panel.add(imageComponent);
+			}
+
 		} catch (IOException ioException) {
-			System.err.format("IO exception: %s", ioException.getMessage());
+			LOGGER.log(Level.SEVERE, "Error loading image", ioException);
 		}
 
-		LOGGER.info(String.format("Rendered in %s mills", startTime + System.currentTimeMillis()));
-		LOGGER.info(getGrid().print());
+		setImageComponentMap(new HashMap<>());
+
+		for (int index = 0; index < presenterImageComponents.size(); index++) {
+
+			contorllerImageComponents.get(index).addMouseListener(this);
+
+			getImageComponentMap().put(contorllerImageComponents.get(index), presenterImageComponents.get(index));
+		}
+
+		addFrames(frame);
+
 		repaint();
 	}
 
@@ -198,20 +157,12 @@ public class MainController implements WindowListener {
 		this.presentorFrame = presentorFrame;
 	}
 
-	private ImageComponent getImageComponent() {
-		return imageComponent;
-	}
-
-	private void setImageComponent(ImageComponent imageComponent) {
-		this.imageComponent = imageComponent;
-	}
-
 	private String getFilePath() {
 		return filePath;
 	}
 
 	private void setFilePath(String filePath) {
-		LOGGER.info(String.format("image: %s", filePath));
+		LOGGER.info(String.format("image:(%s) exists: %s", filePath, new File(filePath).exists()));
 		this.filePath = filePath;
 	}
 
@@ -221,6 +172,14 @@ public class MainController implements WindowListener {
 
 	private void setGrid(Grid grid) {
 		this.grid = grid;
+	}
+
+	private Map<ImageComponent, ImageComponent> getImageComponentMap() {
+		return imageComponentMap;
+	}
+
+	private void setImageComponentMap(Map<ImageComponent, ImageComponent> imageComponentMap) {
+		this.imageComponentMap = imageComponentMap;
 	}
 
 	@Override
@@ -260,6 +219,43 @@ public class MainController implements WindowListener {
 
 	@Override
 	public void windowDeactivated(WindowEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent mouseEvent) {
+
+		ImageComponent controllerImageComponent = (ImageComponent) mouseEvent.getComponent();
+
+		ImageComponent presenterImageComponent = getImageComponentMap().get(controllerImageComponent);
+
+		presenterImageComponent
+				.setPresentedImage(Shader.shade(presenterImageComponent.getOrginalImage(), TileState.FOGGED));
+
+		presenterImageComponent.repaint();
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
 		// TODO Auto-generated method stub
 
 	}
