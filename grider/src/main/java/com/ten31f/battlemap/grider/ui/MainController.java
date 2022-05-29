@@ -228,11 +228,15 @@ public class MainController implements WindowListener, MouseListener {
 
 		ImageComponent controllerImageComponent = (ImageComponent) mouseEvent.getComponent();
 
+		controllerImageComponent
+				.setPresentedImage(Shader.shade(controllerImageComponent.getOrginalImage(), TileState.FOGGED));
+
 		ImageComponent presenterImageComponent = getImageComponentMap().get(controllerImageComponent);
 
 		presenterImageComponent
 				.setPresentedImage(Shader.shade(presenterImageComponent.getOrginalImage(), TileState.FOGGED));
 
+		controllerImageComponent.repaint();
 		presenterImageComponent.repaint();
 	}
 
