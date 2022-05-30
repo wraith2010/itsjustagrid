@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Frame;
 import java.awt.GridLayout;
 import java.awt.Panel;
+import java.awt.Point;
 import java.awt.ScrollPane;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -29,11 +30,10 @@ public class MainController implements WindowListener, MouseListener {
 
 	private static Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
-	private Frame presentorFrame = null;
-	private Frame dmFrame = null;
-
 	private String filePath = null;
 	private Grid grid = null;
+
+	private ScrollPane presnterScrollPane = null;
 
 	private List<Frame> frames = null;
 
@@ -43,13 +43,12 @@ public class MainController implements WindowListener, MouseListener {
 		setFilePath(filePath);
 		setGrid(new Grid(50, 50));
 		prepareGUI();
-		repaint();
 	}
 
 	private void prepareGUI() {
 
 		Frame frame = new Frame();
-		setPresentorFrame(frame);
+
 		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
 		frame.setSize(500, 500);
@@ -59,10 +58,11 @@ public class MainController implements WindowListener, MouseListener {
 		ScrollPane scrollPane = new ScrollPane();
 		frame.add(scrollPane);
 
-		Panel panel = new Panel();
-		panel.setBackground(Color.darkGray);
-		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
-		scrollPane.add(panel);
+		ViewPortHighlightPanel viewPortHighlightPanel = new ViewPortHighlightPanel();
+
+		viewPortHighlightPanel.setBackground(Color.darkGray);
+		viewPortHighlightPanel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
+		scrollPane.add(viewPortHighlightPanel);
 
 		List<ImageComponent> contorllerImageComponents = null;
 		try {
@@ -70,7 +70,7 @@ public class MainController implements WindowListener, MouseListener {
 
 			for (ImageComponent imageComponent : contorllerImageComponents) {
 
-				panel.add(imageComponent);
+				viewPortHighlightPanel.add(imageComponent);
 			}
 
 		} catch (IOException ioException) {
@@ -80,20 +80,21 @@ public class MainController implements WindowListener, MouseListener {
 		addFrames(frame);
 
 		frame = new Frame();
-		setDmFrame(frame);
+
 		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		frame.setVisible(true);
 		frame.setSize(500, 500);
 		frame.addWindowListener(this);
 		frame.setTitle("presenter");
 
-		scrollPane = new ScrollPane();
-		frame.add(scrollPane);
+		setPresnterScrollPane(new ScrollPane(ScrollPane.SCROLLBARS_NEVER));
+		frame.add(getPresnterScrollPane());
+		viewPortHighlightPanel.setScrollPane(getPresnterScrollPane());
 
-		panel = new Panel();
+		Panel panel = new Panel();
 		panel.setBackground(Color.darkGray);
 		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
-		scrollPane.add(panel);
+		getPresnterScrollPane().add(panel);
 
 		List<ImageComponent> presenterImageComponents = null;
 		try {
@@ -119,11 +120,11 @@ public class MainController implements WindowListener, MouseListener {
 
 		addFrames(frame);
 
-		repaint();
 	}
 
 	private void repaint() {
-		getFrames().stream().forEach(Frame::repaint);
+		if (getFrames() != null)
+			getFrames().stream().forEach(Frame::repaint);
 	}
 
 	private void setFrames(List<Frame> frames) {
@@ -139,22 +140,6 @@ public class MainController implements WindowListener, MouseListener {
 			setFrames(new ArrayList<>());
 
 		getFrames().add(frame);
-	}
-
-	private Frame getDmFrame() {
-		return dmFrame;
-	}
-
-	private void setDmFrame(Frame dmFrame) {
-		this.dmFrame = dmFrame;
-	}
-
-	private Frame getPresentorFrame() {
-		return presentorFrame;
-	}
-
-	private void setPresentorFrame(Frame presentorFrame) {
-		this.presentorFrame = presentorFrame;
 	}
 
 	private String getFilePath() {
@@ -180,6 +165,14 @@ public class MainController implements WindowListener, MouseListener {
 
 	private void setImageComponentMap(Map<ImageComponent, ImageComponent> imageComponentMap) {
 		this.imageComponentMap = imageComponentMap;
+	}
+
+	private ScrollPane getPresnterScrollPane() {
+		return presnterScrollPane;
+	}
+
+	private void setPresnterScrollPane(ScrollPane presnterScrollPane) {
+		this.presnterScrollPane = presnterScrollPane;
 	}
 
 	@Override
@@ -227,17 +220,29 @@ public class MainController implements WindowListener, MouseListener {
 	public void mouseClicked(MouseEvent mouseEvent) {
 
 		ImageComponent controllerImageComponent = (ImageComponent) mouseEvent.getComponent();
-
-		controllerImageComponent
-				.setPresentedImage(Shader.shade(controllerImageComponent.getOrginalImage(), TileState.FOGGED));
-
 		ImageComponent presenterImageComponent = getImageComponentMap().get(controllerImageComponent);
 
-		presenterImageComponent
-				.setPresentedImage(Shader.shade(presenterImageComponent.getOrginalImage(), TileState.FOGGED));
+		switch (mouseEvent.getButton()) {
+		case MouseEvent.BUTTON1:
 
-		controllerImageComponent.repaint();
-		presenterImageComponent.repaint();
+			controllerImageComponent
+					.setPresentedImage(Shader.shade(controllerImageComponent.getOrginalImage(), TileState.FOGGED));
+
+			presenterImageComponent
+					.setPresentedImage(Shader.shade(presenterImageComponent.getOrginalImage(), TileState.FOGGED));
+
+			controllerImageComponent.repaint();
+			presenterImageComponent.repaint();
+
+			break;
+		case MouseEvent.BUTTON3:
+
+
+			getPresnterScrollPane().setScrollPosition(presenterImageComponent.getX(), presenterImageComponent.getY());
+
+			break;
+		}
+
 	}
 
 	@Override

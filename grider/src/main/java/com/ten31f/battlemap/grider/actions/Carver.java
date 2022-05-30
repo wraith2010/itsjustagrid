@@ -3,16 +3,11 @@ package com.ten31f.battlemap.grider.actions;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.ten31f.battlemap.grider.domain.Grid;
 import com.ten31f.battlemap.grider.ui.ImageComponent;
-import com.ten31f.battlemap.grider.ui.MainController;
 
 public class Carver {
-
-	private static Logger LOGGER = Logger.getLogger(MainController.class.getName());
 
 	private Carver() {
 	}
@@ -29,9 +24,6 @@ public class Carver {
 
 		for (int yIndex = 0; yIndex < grid.getxCells(); yIndex++) {
 			for (int xIndex = 0; xIndex < grid.getxCells(); xIndex++) {
-
-				LOGGER.log(Level.INFO, String.format("sub section(x:%s y:%s width: %s height: %s)", xIndex * subWidth,
-						yIndex * subHeight, subWidth, subHeight));
 
 				BufferedImage subBufferedImage = bufferedImage.getSubimage(xIndex * subWidth, yIndex * subHeight,
 						subWidth, subHeight);
