@@ -6,11 +6,9 @@ import java.awt.Panel;
 import java.awt.ScrollPane;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
-import java.util.logging.Logger;
 
+@SuppressWarnings("serial")
 public class ViewPortHighlightPanel extends Panel implements AdjustmentListener {
-
-	private static Logger LOGGER = Logger.getLogger(ViewPortHighlightPanel.class.getName());
 
 	private ScrollPane scrollPane = null;
 
@@ -30,15 +28,9 @@ public class ViewPortHighlightPanel extends Panel implements AdjustmentListener 
 		super.paint(graphics);
 
 		if (getScrollPane() != null) {
-
 			graphics.setColor(Color.red);
-
-			LOGGER.info(String.format("(%S,%S,%S,%S,)", getScrollPane().getHAdjustable().getValue(),
-					getScrollPane().getVAdjustable().getValue(), getScrollPane().getWidth(),
-					getScrollPane().getHeight()));
 			graphics.drawRect(getScrollPane().getHAdjustable().getValue(), getScrollPane().getVAdjustable().getValue(),
 					getScrollPane().getWidth(), getScrollPane().getHeight());
-
 		}
 
 	}

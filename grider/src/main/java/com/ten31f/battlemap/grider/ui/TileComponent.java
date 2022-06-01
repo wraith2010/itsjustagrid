@@ -1,13 +1,12 @@
 package com.ten31f.battlemap.grider.ui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.ten31f.battlemap.grider.domain.TileState;
 
@@ -17,11 +16,21 @@ public class TileComponent extends Component {
 	private transient BufferedImage orginalImage = null;
 	private transient BufferedImage presentedImage = null;
 
-	private List<TileState> tileStates = null;
+	private TileState tileState = TileState.REVEALED;
+
+	private boolean selected = false;
+	private boolean controller = false;
 
 	@Override
 	public void paint(Graphics graphics) {
 		graphics.drawImage(getPresentedImage(), 0, 0, null);
+
+		getTileState().paint(graphics, getOrginalImage().getWidth(), getOrginalImage().getHeight(), isController());
+
+		if (isSelected()) {
+			graphics.setColor(Color.RED);
+			graphics.drawRect(2, 2, getOrginalImage().getWidth() - 4, getOrginalImage().getHeight() - 4);
+		}
 	}
 
 	@Override
@@ -50,25 +59,28 @@ public class TileComponent extends Component {
 		this.presentedImage = presentedImage;
 	}
 
-	public List<TileState> getTileStates() {
-		return tileStates;
+	public TileState getTileState() {
+		return tileState;
 	}
 
-	public void setTileStates(List<TileState> tileStates) {
-		this.tileStates = tileStates;
+	public void setTileState(TileState tileState) {
+		this.tileState = tileState;
 	}
 
-	public void addTileState(TileState tileState) {
-		if (getTileStates() == null) {
-			setTileStates(new ArrayList<>());
-		}
-		getTileStates().add(tileState);
+	public boolean isSelected() {
+		return selected;
 	}
 
-	public void removeTileState(TileState tileState) {
-		if (getTileStates() == null)
-			return;
-		getTileStates().remove(tileState);
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+
+	public boolean isController() {
+		return controller;
+	}
+
+	public void setController(boolean controller) {
+		this.controller = controller;
 	}
 
 }

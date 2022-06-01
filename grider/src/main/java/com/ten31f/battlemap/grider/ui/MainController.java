@@ -3,9 +3,12 @@ package com.ten31f.battlemap.grider.ui;
 import java.awt.Color;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.MenuItem;
 import java.awt.Panel;
-import java.awt.Point;
+import java.awt.PopupMenu;
 import java.awt.ScrollPane;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
@@ -16,19 +19,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
 import com.ten31f.battlemap.grider.actions.Carver;
-import com.ten31f.battlemap.grider.actions.Shader;
 import com.ten31f.battlemap.grider.domain.Grid;
 import com.ten31f.battlemap.grider.domain.TileState;
 
-public class MainController implements WindowListener, MouseListener {
+public class MainController implements WindowListener, MouseListener, ActionListener {
 
-	private static Logger LOGGER = Logger.getLogger(MainController.class.getName());
+	private static Logger log = Logger.getLogger(MainController.class.getName());
 
 	private String filePath = null;
 	private Grid grid = null;
@@ -37,7 +40,7 @@ public class MainController implements WindowListener, MouseListener {
 
 	private List<Frame> frames = null;
 
-	private Map<TileComponent, TileComponent> imageComponentMap = null;
+	private Map<TileComponent, TileComponent> tileMap = null;
 
 	public MainController(String filePath) {
 		setFilePath(filePath);
@@ -47,16 +50,16 @@ public class MainController implements WindowListener, MouseListener {
 
 	private void prepareGUI() {
 
-		Frame frame = new Frame();
+		Frame controllerframe = new Frame();
 
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-		frame.setVisible(true);
-		frame.setSize(500, 500);
-		frame.addWindowListener(this);
-		frame.setTitle("Controller");
+		controllerframe.setExtendedState(Frame.MAXIMIZED_BOTH);
+		controllerframe.setVisible(true);
+		controllerframe.setSize(500, 500);
+		controllerframe.addWindowListener(this);
+		controllerframe.setTitle("Controller");
 
 		ScrollPane scrollPane = new ScrollPane();
-		frame.add(scrollPane);
+		controllerframe.add(scrollPane);
 
 		ViewPortHighlightPanel viewPortHighlightPanel = new ViewPortHighlightPanel();
 
@@ -64,31 +67,18 @@ public class MainController implements WindowListener, MouseListener {
 		viewPortHighlightPanel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
 		scrollPane.add(viewPortHighlightPanel);
 
-		List<ImageComponent> contorllerImageComponents = null;
-		try {
-			contorllerImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
+		addFrames(controllerframe);
 
-			for (TileComponent imageComponent : contorllerImageComponents) {
+		Frame presenterFrame = new Frame();
 
-				viewPortHighlightPanel.add(imageComponent);
-			}
-
-		} catch (IOException ioException) {
-			LOGGER.log(Level.SEVERE, "Error loading image", ioException);
-		}
-
-		addFrames(frame);
-
-		frame = new Frame();
-
-		frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-		frame.setVisible(true);
-		frame.setSize(500, 500);
-		frame.addWindowListener(this);
-		frame.setTitle("presenter");
+		presenterFrame.setExtendedState(Frame.MAXIMIZED_BOTH);
+		presenterFrame.setVisible(true);
+		presenterFrame.setSize(500, 500);
+		presenterFrame.addWindowListener(this);
+		presenterFrame.setTitle("presenter");
 
 		setPresnterScrollPane(new ScrollPane(ScrollPane.SCROLLBARS_NEVER));
-		frame.add(getPresnterScrollPane());
+		presenterFrame.add(getPresnterScrollPane());
 		viewPortHighlightPanel.setScrollPane(getPresnterScrollPane());
 
 		Panel panel = new Panel();
@@ -96,29 +86,33 @@ public class MainController implements WindowListener, MouseListener {
 		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
 		getPresnterScrollPane().add(panel);
 
+		addFrames(presenterFrame);
+
+		setTileMap(new HashMap<>());
+
+		List<TileComponent> controllerTileComponents = null;
 		List<TileComponent> presenterImageComponents = null;
 		try {
+			controllerTileComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
+
+			for (TileComponent contorllerTileComponent : controllerTileComponents) {
+
+				contorllerTileComponent.addMouseListener(this);
+				viewPortHighlightPanel.add(contorllerTileComponent);
+				contorllerTileComponent.setController(true);
+			}
+
 			presenterImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
 
-			for (TileComponent imageComponent : presenterImageComponents) {
+			presenterImageComponents.stream().forEach(panel::add);
 
-				panel.add(imageComponent);
+			for (int index = 0; index < presenterImageComponents.size(); index++) {
+				getTileMap().put(controllerTileComponents.get(index), presenterImageComponents.get(index));
 			}
 
 		} catch (IOException ioException) {
-			LOGGER.log(Level.SEVERE, "Error loading image", ioException);
+			log.log(Level.SEVERE, "Error loading image", ioException);
 		}
-
-		setImageComponentMap(new HashMap<>());
-
-		for (int index = 0; index < presenterImageComponents.size(); index++) {
-
-			contorllerImageComponents.get(index).addMouseListener(this);
-
-			getImageComponentMap().put(contorllerImageComponents.get(index), presenterImageComponents.get(index));
-		}
-
-		addFrames(frame);
 
 	}
 
@@ -147,7 +141,9 @@ public class MainController implements WindowListener, MouseListener {
 	}
 
 	private void setFilePath(String filePath) {
-		LOGGER.info(String.format("image:(%s) exists: %s", filePath, new File(filePath).exists()));
+		if (log.isLoggable(Level.FINE)) {
+			log.fine(String.format("image:(%s) exists: %s", filePath, new File(filePath).exists()));
+		}
 		this.filePath = filePath;
 	}
 
@@ -159,12 +155,12 @@ public class MainController implements WindowListener, MouseListener {
 		this.grid = grid;
 	}
 
-	private Map<TileComponent, TileComponent> getImageComponentMap() {
-		return imageComponentMap;
+	private Map<TileComponent, TileComponent> getTileMap() {
+		return tileMap;
 	}
 
-	private void setImageComponentMap(Map<TileComponent, TileComponent> imageComponentMap) {
-		this.imageComponentMap = imageComponentMap;
+	private void setTileMap(Map<TileComponent, TileComponent> tileMap) {
+		this.tileMap = tileMap;
 	}
 
 	private ScrollPane getPresnterScrollPane() {
@@ -177,14 +173,12 @@ public class MainController implements WindowListener, MouseListener {
 
 	@Override
 	public void windowOpened(WindowEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-		System.exit(0);
-
+		// do nothing for now
 	}
 
 	@Override
@@ -195,14 +189,12 @@ public class MainController implements WindowListener, MouseListener {
 
 	@Override
 	public void windowIconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void windowDeiconified(WindowEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
@@ -212,60 +204,153 @@ public class MainController implements WindowListener, MouseListener {
 
 	@Override
 	public void windowDeactivated(WindowEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent mouseEvent) {
 
-		TileComponent controllerImageComponent = (TileComponent) mouseEvent.getComponent();
-		ImageComponent presenterImageComponent = getImageComponentMap().get(controllerImageComponent);
+		TileComponent controllerTileComponent = (TileComponent) mouseEvent.getComponent();
+
+		if (controllerTileComponent == null)
+			return;
 
 		switch (mouseEvent.getButton()) {
 		case MouseEvent.BUTTON1:
 
-			controllerImageComponent
-					.setPresentedImage(Shader.shade(controllerImageComponent.getOrginalImage(), TileState.FOGGED));
-
-			presenterImageComponent
-					.setPresentedImage(Shader.shade(presenterImageComponent.getOrginalImage(), TileState.FOGGED));
-
-			controllerImageComponent.repaint();
-			presenterImageComponent.repaint();
+			controllerTileComponent.setSelected(!controllerTileComponent.isSelected());
+			controllerTileComponent.repaint();
 
 			break;
 		case MouseEvent.BUTTON3:
 
+			PopupMenu popupMenu = new PopupMenu();
 
-			getPresnterScrollPane().setScrollPosition(presenterImageComponent.getX(), presenterImageComponent.getY());
+			MenuItem menuItem = new MenuItem("Present");
+			menuItem.addActionListener(this);
+			popupMenu.add(menuItem);
 
+			menuItem = new MenuItem("Fogged");
+			menuItem.addActionListener(this);
+			popupMenu.add(menuItem);
+
+			menuItem = new MenuItem("Hidden");
+			menuItem.addActionListener(this);
+			popupMenu.add(menuItem);
+
+			menuItem = new MenuItem("Revealed");
+			menuItem.addActionListener(this);
+			popupMenu.add(menuItem);
+
+			controllerTileComponent.add(popupMenu);
+
+			popupMenu.show(controllerTileComponent, mouseEvent.getX(), mouseEvent.getY());
+
+			break;
+		default:
 			break;
 		}
 
 	}
 
+	private void present(TileComponent presenterTileComponent) {
+		int x = presenterTileComponent.getX() - ((int) (getPresnterScrollPane().getBounds().getWidth() / 2));
+		int y = presenterTileComponent.getY() - ((int) (getPresnterScrollPane().getBounds().getHeight() / 2));
+
+		getPresnterScrollPane().setScrollPosition(x, y);
+	}
+
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-
+		// do nothing for now
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
+		// do nothing for now
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent actionEvent) {
+
+		MenuItem menuItem = (MenuItem) actionEvent.getSource();
+		PopupMenu popupMenu = (PopupMenu) menuItem.getParent();
+		TileComponent controllerTileComponent = (TileComponent) popupMenu.getParent();
+		TileComponent presnterTileComponent = getTileMap().get(controllerTileComponent);
+
+		List<TileComponent> selectedTiles = getTileMap().entrySet().stream()
+				.filter(entry -> entry.getKey().isSelected()).map(Entry::getKey).toList();
+
+		List<TileComponent> selectedCounterParts = getTileMap().entrySet().stream()
+				.filter(entry -> entry.getKey().isSelected()).map(Entry::getValue).toList();
+
+		switch (actionEvent.getActionCommand()) {
+
+		case "Present":
+			present(controllerTileComponent);
+			break;
+		case "Fogged":
+			if (!selectedTiles.isEmpty()) {
+
+				selectedTiles.stream().forEach(tile -> tile.setTileState(TileState.FOGGED));
+				selectedCounterParts.stream().forEach(tile -> tile.setTileState(TileState.FOGGED));
+
+				selectedTiles.stream().forEach(TileComponent::repaint);
+				selectedCounterParts.stream().forEach(TileComponent::repaint);
+			} else {
+				controllerTileComponent.setTileState(TileState.FOGGED);
+				presnterTileComponent.setTileState(TileState.FOGGED);
+
+				controllerTileComponent.repaint();
+				presnterTileComponent.repaint();
+			}
+			break;
+		case "Hidden":
+			if (!selectedTiles.isEmpty()) {
+
+				selectedTiles.stream().forEach(tile -> tile.setTileState(TileState.HIDDEN));
+				selectedCounterParts.stream().forEach(tile -> tile.setTileState(TileState.HIDDEN));
+
+				selectedTiles.stream().forEach(TileComponent::repaint);
+				selectedCounterParts.stream().forEach(TileComponent::repaint);
+			} else {
+				controllerTileComponent.setTileState(TileState.HIDDEN);
+				presnterTileComponent.setTileState(TileState.HIDDEN);
+
+				controllerTileComponent.repaint();
+				presnterTileComponent.repaint();
+			}
+			break;
+		case "Revealed":
+			if (!selectedTiles.isEmpty()) {
+
+				selectedTiles.stream().forEach(tile -> tile.setTileState(TileState.REVEALED));
+				selectedCounterParts.stream().forEach(tile -> tile.setTileState(TileState.REVEALED));
+
+				selectedTiles.stream().forEach(TileComponent::repaint);
+				selectedCounterParts.stream().forEach(TileComponent::repaint);
+			} else {
+				controllerTileComponent.setTileState(TileState.REVEALED);
+				presnterTileComponent.setTileState(TileState.REVEALED);
+
+				controllerTileComponent.repaint();
+				presnterTileComponent.repaint();
+			}
+			break;
+		default:
+			break;
+
+		}
 
 	}
 
