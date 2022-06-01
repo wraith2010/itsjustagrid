@@ -1,25 +1,46 @@
 package com.ten31f.battlemap.grider.domain;
 
 import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
 public enum TileState {
 
-	HIDDEN(Color.black, 255), REVEALED(null, 0), FOGGED(Color.gray, 150);
+	HIDDEN, FOGGED, SELECTED;
 
-	private Color color = null;
-	private int alpha = 255;
+	public void paint(BufferedImage bufferedImage) {
+		switch (this) {
+		case FOGGED:
+			shade(bufferedImage, Color.gray, 150);
+			break;
+		case HIDDEN:
+			shade(bufferedImage, Color.black, 255);
+			break;
+		case SELECTED:
+			ring(bufferedImage, Color.red);
+			break;
+		default:
+			break;
 
-	private TileState(Color color, int alpha) {
-		this.color = color;
-		this.alpha = alpha;
+		}
 	}
 
-	public int getAlpha() {
-		return alpha;
+	private void shade(BufferedImage bufferedImage, Color color, int alpha) {
+
+		Graphics graphics = bufferedImage.getGraphics();
+
+		graphics.setColor(new Color(color.getRed(), color.getBlue(), color.getGreen(), alpha));
+
+		graphics.fillRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
 	}
 
-	public Color getColor() {
-		return color;
+	private void ring(BufferedImage bufferedImage, Color color) {
+
+		Graphics graphics = bufferedImage.getGraphics();
+
+		graphics.setColor(color);
+
+		graphics.drawRect(0, 0, bufferedImage.getWidth(), bufferedImage.getHeight());
 	}
 
 }

@@ -5,16 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.ten31f.battlemap.grider.domain.Grid;
-import com.ten31f.battlemap.grider.ui.ImageComponent;
+import com.ten31f.battlemap.grider.ui.TileComponent;
 
 public class Carver {
 
 	private Carver() {
 	}
 
-	public static List<ImageComponent> carve(BufferedImage bufferedImage, Grid grid) {
+	public static List<TileComponent> carve(BufferedImage bufferedImage, Grid grid) {
 
-		List<ImageComponent> imageComponents = new ArrayList<>();
+		List<TileComponent> imageComponents = new ArrayList<>();
 
 		int width = bufferedImage.getWidth();
 		int height = bufferedImage.getHeight();
@@ -28,7 +28,7 @@ public class Carver {
 				BufferedImage subBufferedImage = bufferedImage.getSubimage(xIndex * subWidth, yIndex * subHeight,
 						subWidth, subHeight);
 
-				ImageComponent imageComponent = new ImageComponent();
+				TileComponent imageComponent = new TileComponent();
 				imageComponent.setOrginalImage(subBufferedImage);
 				imageComponent.setSize(width, height);
 

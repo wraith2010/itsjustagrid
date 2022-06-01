@@ -37,7 +37,7 @@ public class MainController implements WindowListener, MouseListener {
 
 	private List<Frame> frames = null;
 
-	private Map<ImageComponent, ImageComponent> imageComponentMap = null;
+	private Map<TileComponent, TileComponent> imageComponentMap = null;
 
 	public MainController(String filePath) {
 		setFilePath(filePath);
@@ -68,7 +68,7 @@ public class MainController implements WindowListener, MouseListener {
 		try {
 			contorllerImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
 
-			for (ImageComponent imageComponent : contorllerImageComponents) {
+			for (TileComponent imageComponent : contorllerImageComponents) {
 
 				viewPortHighlightPanel.add(imageComponent);
 			}
@@ -96,11 +96,11 @@ public class MainController implements WindowListener, MouseListener {
 		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
 		getPresnterScrollPane().add(panel);
 
-		List<ImageComponent> presenterImageComponents = null;
+		List<TileComponent> presenterImageComponents = null;
 		try {
 			presenterImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
 
-			for (ImageComponent imageComponent : presenterImageComponents) {
+			for (TileComponent imageComponent : presenterImageComponents) {
 
 				panel.add(imageComponent);
 			}
@@ -159,11 +159,11 @@ public class MainController implements WindowListener, MouseListener {
 		this.grid = grid;
 	}
 
-	private Map<ImageComponent, ImageComponent> getImageComponentMap() {
+	private Map<TileComponent, TileComponent> getImageComponentMap() {
 		return imageComponentMap;
 	}
 
-	private void setImageComponentMap(Map<ImageComponent, ImageComponent> imageComponentMap) {
+	private void setImageComponentMap(Map<TileComponent, TileComponent> imageComponentMap) {
 		this.imageComponentMap = imageComponentMap;
 	}
 
@@ -219,7 +219,7 @@ public class MainController implements WindowListener, MouseListener {
 	@Override
 	public void mouseClicked(MouseEvent mouseEvent) {
 
-		ImageComponent controllerImageComponent = (ImageComponent) mouseEvent.getComponent();
+		TileComponent controllerImageComponent = (TileComponent) mouseEvent.getComponent();
 		ImageComponent presenterImageComponent = getImageComponentMap().get(controllerImageComponent);
 
 		switch (mouseEvent.getButton()) {
