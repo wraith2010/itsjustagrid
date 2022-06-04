@@ -11,148 +11,133 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
 
 import com.ten31f.battlemap.grider.actions.Carver;
 import com.ten31f.battlemap.grider.domain.Grid;
+import com.ten31f.battlemap.grider.domain.GridMap;
 import com.ten31f.battlemap.grider.domain.TileState;
 
-public class MainController implements WindowListener, MouseListener, ActionListener {
+public class MainController implements MouseListener, ActionListener {
 
 	private static Logger log = Logger.getLogger(MainController.class.getName());
 
-	private String filePath = null;
-	private Grid grid = null;
+	private List<GridMap> gridMaps = null;
+	private List<Frame> frames = new ArrayList<>();
 
 	private ScrollPane presnterScrollPane = null;
-
-	private List<Frame> frames = null;
+	private ScrollPane contorllerScrollPane = null;
 
 	private Map<TileComponent, TileComponent> tileMap = null;
+	private ViewPortHighlightPanel viewPortHighlightPanel = null;
 
-	public MainController(String filePath) {
-		setFilePath(filePath);
-		setGrid(new Grid(50, 50));
+	public MainController() {
 		prepareGUI();
 	}
 
 	private void prepareGUI() {
 
+		WindowListner windowListner = new WindowListner();
+
 		Frame controllerframe = new Frame();
+		getFrames().add(controllerframe);
 
 		controllerframe.setExtendedState(Frame.MAXIMIZED_BOTH);
 		controllerframe.setVisible(true);
 		controllerframe.setSize(500, 500);
-		controllerframe.addWindowListener(this);
+		controllerframe.addWindowListener(windowListner);
 		controllerframe.setTitle("Controller");
 
-		ScrollPane scrollPane = new ScrollPane();
-		controllerframe.add(scrollPane);
+		setContorllerScrollPane(new ScrollPane());
+		controllerframe.add(getContorllerScrollPane());
 
-		ViewPortHighlightPanel viewPortHighlightPanel = new ViewPortHighlightPanel();
+		setViewPortHighlightPanel(new ViewPortHighlightPanel());
 
-		viewPortHighlightPanel.setBackground(Color.darkGray);
-		viewPortHighlightPanel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
-		scrollPane.add(viewPortHighlightPanel);
-
-		addFrames(controllerframe);
+		getViewPortHighlightPanel().setBackground(Color.darkGray);
+		getContorllerScrollPane().add(getViewPortHighlightPanel());
 
 		Frame presenterFrame = new Frame();
+		getFrames().add(presenterFrame);
 
 		presenterFrame.setExtendedState(Frame.MAXIMIZED_BOTH);
 		presenterFrame.setVisible(true);
 		presenterFrame.setSize(500, 500);
-		presenterFrame.addWindowListener(this);
-		presenterFrame.setTitle("presenter");
+		presenterFrame.addWindowListener(windowListner);
+		presenterFrame.setTitle("Presenter");
 
 		setPresnterScrollPane(new ScrollPane(ScrollPane.SCROLLBARS_NEVER));
 		presenterFrame.add(getPresnterScrollPane());
-		viewPortHighlightPanel.setScrollPane(getPresnterScrollPane());
+		getViewPortHighlightPanel().setScrollPane(getPresnterScrollPane());
 
-		Panel panel = new Panel();
-		panel.setBackground(Color.darkGray);
-		panel.setLayout(new GridLayout(getGrid().getyCells(), getGrid().getxCells(), 2, 2));
-		getPresnterScrollPane().add(panel);
-
-		addFrames(presenterFrame);
-
-		setTileMap(new HashMap<>());
-
-		List<TileComponent> controllerTileComponents = null;
-		List<TileComponent> presenterImageComponents = null;
-		try {
-			controllerTileComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
-
-			for (TileComponent contorllerTileComponent : controllerTileComponents) {
-
-				contorllerTileComponent.addMouseListener(this);
-				viewPortHighlightPanel.add(contorllerTileComponent);
-				contorllerTileComponent.setController(true);
-			}
-
-			presenterImageComponents = Carver.carve(ImageIO.read(new File(getFilePath())), getGrid());
-
-			presenterImageComponents.stream().forEach(panel::add);
-
-			for (int index = 0; index < presenterImageComponents.size(); index++) {
-				getTileMap().put(controllerTileComponents.get(index), presenterImageComponents.get(index));
-			}
-
-		} catch (IOException ioException) {
-			log.log(Level.SEVERE, "Error loading image", ioException);
-		}
-
-	}
-
-	private void repaint() {
-		if (getFrames() != null)
-			getFrames().stream().forEach(Frame::repaint);
-	}
-
-	private void setFrames(List<Frame> frames) {
-		this.frames = frames;
+		new MenuHandler(this, controllerframe);
 	}
 
 	private List<Frame> getFrames() {
 		return frames;
 	}
 
-	private void addFrames(Frame frame) {
-		if (getFrames() == null)
-			setFrames(new ArrayList<>());
-
-		getFrames().add(frame);
+	public List<GridMap> getGridMaps() {
+		return gridMaps;
 	}
 
-	private String getFilePath() {
-		return filePath;
+	public void setGridMaps(List<GridMap> gridMaps) {
+		this.gridMaps = gridMaps;
 	}
 
-	private void setFilePath(String filePath) {
-		if (log.isLoggable(Level.FINE)) {
-			log.fine(String.format("image:(%s) exists: %s", filePath, new File(filePath).exists()));
+	public void addGridMap(GridMap gridMap) {
+		if (getGridMaps() == null)
+			setGridMaps(new ArrayList<>());
+
+		getGridMaps().add(0, gridMap);
+
+		loadGridMap(gridMap);
+	}
+
+	private void loadGridMap(GridMap gridMap) {
+
+		Grid grid = gridMap.getGrid();
+
+		setTileMap(new HashMap<>());
+
+		getViewPortHighlightPanel().removeAll();
+		getViewPortHighlightPanel().setLayout(new GridLayout(grid.getyCells(), grid.getxCells(), 2, 2));
+
+		getPresnterScrollPane().removeAll();
+		Panel panel = new Panel();
+		panel.setBackground(Color.darkGray);
+		panel.setLayout(new GridLayout(grid.getyCells(), grid.getxCells(), 2, 2));
+		getPresnterScrollPane().add(panel);
+
+		List<TileComponent> presenterImageComponents = null;
+		List<TileComponent> controllerTileComponents = Carver.carve(gridMap.getBufferedImage(), grid);
+
+		for (TileComponent contorllerTileComponent : controllerTileComponents) {
+			contorllerTileComponent.addMouseListener(this);
+			getViewPortHighlightPanel().add(contorllerTileComponent);
+			contorllerTileComponent.setController(true);
 		}
-		this.filePath = filePath;
+
+		presenterImageComponents = Carver.carve(gridMap.getBufferedImage(), grid);
+		presenterImageComponents.stream().forEach(panel::add);
+
+		for (int index = 0; index < presenterImageComponents.size(); index++) {
+			getTileMap().put(controllerTileComponents.get(index), presenterImageComponents.get(index));
+		}
+
+		repaint();
 	}
 
-	private Grid getGrid() {
-		return grid;
+	private ViewPortHighlightPanel getViewPortHighlightPanel() {
+		return viewPortHighlightPanel;
 	}
 
-	private void setGrid(Grid grid) {
-		this.grid = grid;
+	private void setViewPortHighlightPanel(ViewPortHighlightPanel viewPortHighlightPanel) {
+		this.viewPortHighlightPanel = viewPortHighlightPanel;
 	}
 
 	private Map<TileComponent, TileComponent> getTileMap() {
@@ -171,40 +156,16 @@ public class MainController implements WindowListener, MouseListener, ActionList
 		this.presnterScrollPane = presnterScrollPane;
 	}
 
-	@Override
-	public void windowOpened(WindowEvent e) {
-		// do nothing for now
+	private ScrollPane getContorllerScrollPane() {
+		return contorllerScrollPane;
 	}
 
-	@Override
-	public void windowClosing(WindowEvent e) {
-		// do nothing for now
+	private void setContorllerScrollPane(ScrollPane contorllerScrollPane) {
+		this.contorllerScrollPane = contorllerScrollPane;
 	}
 
-	@Override
-	public void windowClosed(WindowEvent windowEvent) {
-		System.exit(0);
-
-	}
-
-	@Override
-	public void windowIconified(WindowEvent e) {
-		// do nothing for now
-	}
-
-	@Override
-	public void windowDeiconified(WindowEvent e) {
-		// do nothing for now
-	}
-
-	@Override
-	public void windowActivated(WindowEvent windowEvent) {
-		repaint();
-	}
-
-	@Override
-	public void windowDeactivated(WindowEvent e) {
-		// do nothing for now
+	private void repaint() {
+		getFrames().stream().forEach(Frame::repaint);
 	}
 
 	@Override
